@@ -34,6 +34,12 @@ stages:
     - script: dotnet test --configuration $(BuildConfiguration)
       displayName: 'Run unit tests'
 
+  # Add an independent job to satisfy the dependency requirement
+  - job: IndependentTestJob
+    pool:
+      vmImage: 'windows-latest'
+    steps:
+    - script: echo "This is an independent job for testing."
 
 - stage: Deploy
   jobs:
@@ -47,6 +53,12 @@ stages:
         packageType: 'sdk'
         version: '3.x'
 
+  # Add an independent job to satisfy the dependency requirement
+  - job: IndependentDeployJob
+    pool:
+      vmImage: 'windows-latest'
+    steps:
+    - script: echo "This is an independent job for deployment."
 
 # Notification mechanism
 - stage: Notify
