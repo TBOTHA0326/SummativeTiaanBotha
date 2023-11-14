@@ -1,0 +1,95 @@
+trigger:
+- main
+
+stages:
+- stage: Build
+  jobs:
+  - job: BuildJob
+    pool:
+      vmImage: 'windows-latest'
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: '3.x'
+    - script: dotnet build --configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)
+      displayName: 'Build the application'
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        artifactName: 'drop'
+        publishLocation: 'Container'
+
+- stage: Test
+  jobs:
+  - job: TestJob
+    pool:
+      vmImage: 'windows-latest'
+    dependsOn: Build
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: '3.x'
+    - script: dotnet test --configuration $(BuildConfiguration)
+      displayName: 'Run unit tests'
+
+
+- stage: Deploy
+  jobs:
+  - job: DeployJob
+    pool:
+      vmImage: 'windows-latest'
+    dependsOn: Test
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: '3.x'
+
+
+# Notification mechanism
+- stage: Notify
+  jobs:
+  - job: NotificationJob
+    pool:
+      vmImage: 'windows-latest'
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: '3.x'
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: |
+          # Microsoft Teams Incoming Webhook URL
+          $teamsWebhookUrl = "https://ctucareerco.webhook.office.com/webhookb2/57ca7128-a0db-41c6-8ab0-f50673d12fb6@f5ea3467-a1df-4d7e-a894-9a0c66d9b19e/IncomingWebhook/5715facf530d44e9be290913f4bf3f96/08f13d40-7e27-4375-81d2-549c918cb83a"
+
+          # Notification message
+          $message = @{
+            "@type" = "MessageCard"
+            "@context" = "http://schema.org/extensions"
+            "summary" = "Build/Deployment Failure Notification"
+            "sections" = @(
+              @{
+                "activityTitle" = "Build/Deployment Failure"
+                "activitySubtitle" = "$(Build.DefinitionName)"
+                "facts" = @(
+                  @{
+                    "name" = "Status"
+                    "value" = "Failed"
+                  },
+                  @{
+                    "name" = "Details"
+                    "value" = "The build or deployment has failed. Check Azure DevOps for details."
+                  }
+                )
+                "markdown" = $true
+              }
+            )
+          }
+
+          $jsonMessage = $message | ConvertTo-Json -Depth 10
+          Invoke-RestMethod -Uri $teamsWebhookUrl -Method Post -Body $jsonMessage -ContentType 'application/json'
+      displayName: 'Send Teams Notification'
