@@ -64,7 +64,7 @@ stages:
         targetType: 'inline'
         script: |
           # Microsoft Teams Incoming Webhook URL
-          $teamsWebhookUrl = "https://ctucareerco.webhook.office.com/webhookb2/57ca7128-a0db-41c6-8ab0-f50673d12fb6@f5ea3467-a1df-4d7e-a894-9a0c66d9b19e/IncomingWebhook/5715facf530d44e9be290913f4bf3f96/08f13d40-7e27-4375-81d2-549c918cb83a"
+          $teamsWebhookUrl = "https://ctucareerco.webhook.office.com/webhookb2/57ca7128-a0db-41c6-8ab0-f50673d12fb6@f5ea3467-a1df-4d7e-a894-9a0c66d9b19e/IncomingWebhook/e81e64123a2542daa7dd6f71b5a774aa/08f13d40-7e27-4375-81d2-549c918cb83a"
 
           # Notification message
           $message = @{
